@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Треугольник Казакова: Путь от лоха к Герою</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1000px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+
+        .mode-toggle {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .toggle-btn {
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        #destructiveBtn {
+            background: linear-gradient(135deg, #2c3e50, #e74c3c);
+        }
+
+        #destructiveBtn.active {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        #healingBtn {
+            background: linear-gradient(135deg, #3498db, #27ae60);
+        }
+
+        #healingBtn.active {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .triangle-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin: 0 auto 40px;
+            background: linear-gradient(135deg, #fdf2f2, #f5c6cb);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: inset 0 4px 8px rgba(220, 53, 69, 0.15);
+            transition: all 0.5s ease;
+        }
+
+        .triangle-container.healing {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            box-shadow: inset 0 4px 8px rgba(39, 174, 96, 0.2);
+        }
+
+        .triangle-svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            height: 300px;
+            z-index: 1;
+        }
+
+        .triangle-path {
+            fill: rgba(52, 152, 219, 0.1);
+            stroke: #3498db;
+            stroke-width: 3;
+            transition: all 0.5s ease;
+        }
+
+        .triangle-path.healing {
+            fill: rgba(39, 174, 96, 0.1);
+            stroke: #27ae60;
+        }
+
+        .role {
+            position: absolute;
+            padding: 15px 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            border: 3px solid;
+            min-width: 130px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            color: #2c3e50;
+            border-color: #95a5a6;
+        }
+
+        .role:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+
+        .role.active {
+            transform: scale(1.15);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        }
+
+        .sp-destructive {
+            top: 70px;
+            right: 60px;
+            transition: none;
+        }
+
+        .sp-healing {
+            top: 70px;
+            right: 40px;
+            transition: none;
+        }
+
+        .aj-destructive {
+            bottom: 70px;
+            right: 0px;
+        }
+
+        .aj-healing {
+            bottom: 70px;
+            right: 52px;
+        }
+
+        .me-destructive, .me-healing {
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .me-destructive:hover, .me-healing:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+
+        .me-destructive.active, .me-healing.active {
+            transform: translateY(-50%) scale(1.15);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 22px;
+            font-weight: bold;
+            z-index: 5;
+            transition: all 0.5s ease;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Деструктивная динамика */
+        .arrow-judgment-destructive {
+            top: 150px;
+            left: 210px;
+            color: #f39c12;
+            animation: pulse-orange 2s infinite;
+        }
+
+        .arrow-support-destructive {
+            bottom: 150px;
+            left: 210px;
+            color: #27ae60;
+            animation: pulse-green 2s infinite;
+        }
+
+        .arrow-criticism-destructive {
+            bottom: 170px;
+            right: 120px;
+            color: #e74c3c;
+            animation: pulse-red 2s infinite;
+        }
+
+        .arrow-indifference-destructive {
+            top: 170px;
+            right: 120px;
+            color: #7f8c8d;
+            animation: pulse-red 2s infinite;
+        }
+
+        .arrow-training-destructive {
+            bottom: 120px;
+            right: 260px;
+            color: #9b59b6;
+            animation: pulse-red 2s infinite;
+        }
+
+        .arrow-heartbreak-destructive {
+            top: 120px;
+            right: 260px;
+            color: #e74c3c;
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Исцеляющая динамика */
+        .arrow-learning-healing {
+            top: 150px;
+            left: 210px;
+            color: #27ae60;
+            animation: pulse-green 2s infinite;
+        }
+
+        .arrow-freedom-healing {
+            bottom: 150px;
+            left: 210px;
+            color: #3498db;
+            animation: pulse-blue 2s infinite;
+        }
+
+        .arrow-resistance-healing {
+            bottom: 170px;
+            right: 135px;
+            color: #e74c3c;
+            animation: pulse-red 2s infinite;
+        }
+
+        .arrow-indifference-healing {
+            top: 170px;
+            right: 135px;
+            color: #7f8c8d;
+            animation: pulse-red 2s infinite;
+        }
+
+        .arrow-training-healing {
+            bottom: 120px;
+            right: 260px;
+            color: #9b59b6;
+            animation: pulse-red 2s infinite;
+        }
+
+        .arrow-heartbreak-healing {
+            top: 120px;
+            right: 260px;
+            color: #e74c3c;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes pulse-orange {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes pulse-blue {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .info-panel {
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+            min-height: 60px;
+            transition: all 0.5s ease;
+        }
+
+        .info-panel.healing {
+            background: #e8f5e8;
+            border-left-color: #27ae60;
+        }
+
+        .info-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-content {
+            color: #34495e;
+            line-height: 1.6;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .hero-skills {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .dynamic-title {
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 300;
+            margin-bottom: 20px;
+            transition: all 0.5s ease;
+            padding: 5px 12px;
+            border-radius: 8px;
+            color: #2c3e50;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            display: inline-block;
+            text-transform: lowercase;
+        }
+
+        .dynamic-title-wrapper {
+            text-align: center;
+        }
+
+        .destructive-title {
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.2), rgba(52, 73, 94, 0.2));
+        }
+
+        .healing-title {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.2), rgba(46, 204, 113, 0.2));
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <strong>🦷 Треугольник Казакова:</strong><br>
+            <span style="font-size: 0.7em; font-weight: 300;">Путь от лоха к Герою</span>
+        </h1>
+        
+        <div class="mode-toggle">
+            <button class="toggle-btn active" id="destructiveBtn" onclick="switchMode('destructive')">
+                💔 Деструктивная динамика
+            </button>
+            <button class="toggle-btn" id="healingBtn" onclick="switchMode('healing')">
+                😎 Исцеляющая динамика
+            </button>
+        </div>
+
+        <div class="dynamic-title-wrapper">
+            <div class="dynamic-title destructive-title" id="dynamicTitle">
+                ⚠️ деструктивная динамика: аж - 👍, сп - 👎, я - 🤡
+            </div>
+        </div>
+        
+        <div class="triangle-container" id="triangleContainer">
+            <svg class="triangle-svg" viewBox="0 0 350 300">
+                <path class="triangle-path" id="trianglePath" d="M 50 150 L 300 50 L 300 250 Z" />
+            </svg>
+            
+            <div class="role sp-destructive" id="spRole" onclick="selectRole('sp')">
+                <div style="font-size: 22px; margin-bottom: 5px;">😈 СП</div>
+                <div style="font-size: 16px;">Плохой</div>
+            </div>
+            
+            <div class="role aj-destructive" id="ajRole" onclick="selectRole('aj')">
+                <div style="font-size: 22px; margin-bottom: 5px;">😢 Альфа-жертва</div>
+                <div style="font-size: 16px;">"Хорошая"</div>
+            </div>
+            
+            <div class="role me-destructive" id="meRole" onclick="selectRole('me')">
+                <div style="font-size: 22px; margin-bottom: 5px;">🤡 Лох</div>
+                <div style="font-size: 16px;">Старатель</div>
+            </div>
+            
+            <div class="arrow arrow-criticism-destructive" id="arrow1">😤 ⬆️</div>
+            <div class="arrow arrow-judgment-destructive" id="arrow2">⚔️ ➡️</div>
+            <div class="arrow arrow-support-destructive" id="arrow3">🙏 ➡️</div>
+            <div class="arrow arrow-training-destructive" id="arrow4">⬅️ 🎪</div>
+            <div class="arrow arrow-heartbreak-destructive" id="arrow5">⬅️ 💔</div>
+            <div class="arrow arrow-indifference-destructive" id="arrow6">🍇 ⬇️</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="showArrowMeaning()">🎯 Значение стрелок</button>
+            <button class="btn" onclick="showExample()">📖 Примеры</button>
+            <button class="btn" onclick="showHierarchy()">⚡ Признаки иерархии</button>
+            <button class="btn" onclick="showFable()">🍇 Басня о лисице</button>
+            <button class="btn" onclick="resetSelection()">🔄 Сбросить</button>
+        </div>
+
+        <div class="info-panel" id="infoPanel">
+            <div class="info-title">Нажмите на любую роль для подробной информации</div>
+            <div class="info-content" id="infoContent">
+                <strong>Переключайтесь между динамиками:</strong> Деструктивная показывает, как мы разрушаем зубы, а Исцеляющая - как их восстанавливать через изменение коммуникации.
+            </div>
+        </div>
+
+        <div id="arrowPanel" class="info-panel hidden">
+            <div class="info-title">🎯 Значение стрелок в <span id="arrowModeTitle">деструктивной динамике</span>:</div>
+            <div class="info-content" id="arrowContent">
+                <div id="destructiveArrows">
+                    <strong style="color: #e74c3c;">😤 ⬆️ Пыхтение:</strong> АЖ пыхтит на СП как Лисица из Басни Эзопа пыхтит на виноград<br>
+                    <em>"Ну и кислый же!", "Козлина", "Урод", "Неудачник", "Ничтожество"</em><br><br>
+                    
+                    <strong style="color: #f39c12;">⚔️ ➡️ Нападки:</strong> Лох атакует СП, учит его как жить надо<br>
+                    <em>"Как ты с ней обращаешься!", "Ты бессердечный!", "Ты плохой!", "Так нельзя!", "Нужно быть лучше!", "Ты должен заботиться о семье!"</em><br><br>
+                    
+                    <strong style="color: #27ae60;">🙏 ➡️ Мольба:</strong> Лох умоляет АЖ о любви<br>
+                    <em>"Полюби меня, полюби, я буду каким надо!", "Я все для тебя сделаю!", "Скажи, что я хороший!"</em><br><br>
+                    
+                    <strong style="color: #9b59b6;">⬅️ 🎪 Дрессировка:</strong> АЖ дрессирует Лоха, создавая особенную связь<br>
+                    <em>Радуется подстройке и наказывает за непослушание своим осуждением / отстранением / холодностью / моралью</em><br><br>
+                    
+                    <strong style="color: #e74c3c;">⬅️ 💔 Боль:</strong> СП страдает от отчуждения<br>
+                    <em>Глубокая грусть, чувство несправедливости, безнадежность</em><br><br>
+                    
+                    <strong style="color: #7f8c8d;">🍇 ⬇️ Кислый виноград:</strong> СП относится к АЖ также как виноград к лисице из Басни Эзопа "Лисица и виноград"<br>
+                    <em>"Нет ручек - нет мороженого"</em>
+                </div>
+                
+                <div id="healingArrows" class="hidden">
+                    <strong style="color: #e74c3c;">😤 ⬆️ Сопротивление:</strong> Дракон по прежнему гонит на СП, осуждает и т.д.<br>
+                    <em>"Он нас бросил!", "Какой эгоист!", "Думает только о себе!"</em><br><br>
+                    
+                    <strong style="color: #27ae60;">🎓 ➡️ Обучение:</strong> Герой учится у СП-Учителя<br>
+                    <em>Как ученик у мастера, осваивает запрещенное поведение</em><br><br>
+                    
+                    <strong style="color: #3498db;">🥱 ➡️ Индифферентность:</strong> Герой равнодушен к манипуляциям АЖ<br>
+                    <em>Без зазрения совести, не считается с воздействиями АЖ, не спорит, не вовлекается, не доказывает</em><br><br>
+                    
+                    <strong style="color: #9b59b6;">😤 ⬅️ Раздражение:</strong> АЖ-Дракон раздражается на изменения<br>
+                    <em>"Ты изменился!", "Раньше ты был другим!" - пытается манипулировать, влиять</em><br><br>
+                    
+                    <strong style="color: #e74c3c;">⬅️ 💘 Долгожданная радость:</strong> СП испытывает радость нужности и исцеления отношений<br>
+                    <em>"Как хорошо, что ты ко мне пришел!", "Мы снова вместе!", "Я так скучал!" - за этим скрывается исцеление отношений и зубов</em><br><br>
+                    
+                    <strong style="color: #7f8c8d;">🍇 ⬇️ Принятие:</strong> Учителю (СП) фиолетово на Дракона (АЖ), как винограду на лисицу<br>
+                    <em>"Это её выбор", "Пусть делает что хочет", "Не моя проблема"</em>
+                </div>
+            </div>
+        </div>
+
+        <div id="examplePanel" class="info-panel hidden">
+            <div class="info-title">📖 Примеры динамик:</div>
+            <div class="info-content" id="exampleContent">
+                <div id="destructiveExample">
+                    <strong>Деструктивная (разрушение зубов):</strong><br>
+                    🔥 <strong>СП-Плохой:</strong> Папа работает, живет своей жизнью<br>
+                    😢 <strong>АЖ-Хорошая:</strong> Мама страдает: "Он нас бросил!"<br>
+                    🤡 <strong>Лох:</strong> Сын: "Папа плохой, мама права!"<br><br>
+                    <em>Результат: сын отчуждает мужские качества, зубы разрушаются</em><br><br>
+
+                    <strong>💀 Токсичная иерархия в действии:</strong><br>
+                    <strong>1. АЖ → Лох:</strong> "Я всю жизнь для вас жертвую, а вы неблагодарные!"<br>
+                    <strong>2. Лох → СП:</strong> "Как ты с ней обращаешься! Ты должен быть лучше!"<br>
+                    <strong>3. Лох → другие СП:</strong> "Надо думать о семье! Нельзя быть таким эгоистом!"<br><br>
+                    
+                    <strong>Примеры в жизни:</strong><br>
+                    • <strong>В семье:</strong> Мать внушает детям, что отец плохой → дети осуждают отца<br>
+                    • <strong>На работе:</strong> Начальник-АЖ: "Я стараюсь для компании" → подчиненные нападают на "ленивых" коллег<br>
+                    • <strong>В отношениях:</strong> Партнер-АЖ: "Меня никто не понимает" → вы критикуете его друзей/родных<br><br>
+                    
+                    <strong>🔄 Синдром родительского отчуждения:</strong><br>
+                    • Это отчуждение ПОВЕДЕНИЯ, а не только родителя<br>
+                    • Когда отчуждаем поведение отца - отчуждаем часть себя<br>
+                    • Ребенок может защищать то папу, то маму - суть в ограничении своего поведения
+                </div>
+                
+                <div id="healingExample" class="hidden">
+                    <strong>Исцеляющая (восстановление зубов):</strong><br>
+                    🎓 <strong>СП-Учитель:</strong> Папа - мастер и наставник<br>
+                    🐉 <strong>АЖ-Дракон:</strong> Мама злится на изменения<br>
+                    😎 <strong>Герой:</strong> Сын учится у папы, игнорирует мамины манипуляции<br><br>
+                    <em>Результат: сын обретает целостность, зубы восстанавливаются</em><br><br>
+
+                    <strong>🎯 Здоровая коммуникация:</strong><br>
+                    <strong>1. Герой ← Учитель:</strong> "Вот как можно жить по-другому"<br>
+                    <strong>2. Герой → Дракон:</strong> Спокойное равнодушие к манипуляциям<br>
+                    <strong>3. Герой → другие:</strong> Принятие разных способов жить<br><br>
+                    
+                    <strong>Результат в жизни:</strong><br>
+                    • <strong>Равные отношения:</strong> Без спасения и осуждения<br>
+                    • <strong>Эмоциональная свобода:</strong> Не нужно доказывать свою правоту<br>
+                    • <strong>Здоровые границы:</strong> Можно быть собой без чувства вины
+                </div>
+            </div>
+        </div>
+
+        <div id="hierarchyPanel" class="info-panel hidden">
+            <div class="info-title">⚡ Как распознать токсичную иерархию:</div>
+            <div class="info-content">
+                <em>"У тебя есть власть над своим разумом, а не над внешними событиями. Пойми это - и обретешь силу" - Марк Аврелий</em><br><br>
+                
+                <strong>Люди, которым нужен контроль, строят не отношения, а иерархии. И это чувствуется:</strong><br><br>
+                
+                <strong style="color: #e74c3c;">🗣️ В общении:</strong><br>
+                • Перебивают вас, когда вы говорите<br>
+                • Поправляют вас при всех<br>
+                • Обесценивают ваши достижения, ожидая похвалы за свои<br>
+                • Дают советы, которых вы не просили<br>
+                • Шутят так, что немного больно<br><br>
+                
+                <strong style="color: #f39c12;">🎭 В поведении:</strong><br>
+                • Ведут себя скромно, когда вы сильны<br>
+                • Становятся уверенными, когда вы неуверенны<br>
+                • Чувствуют себя комфортно, когда вы в них нуждаетесь и не представляете угрозы<br>
+                • Поддерживают, пока вы не идете в свою ценность<br><br>
+                
+                <strong style="color: #9b59b6;">💔 Когда вы растете:</strong><br>
+                • Поддержка исчезает<br>
+                • Улыбки становятся натянутыми<br>
+                • Энергия меняется<br>
+                • Вы перестаете казаться безопасным<br><br>
+                
+                <strong style="color: #e74c3c;">🧬 Биохимическая ловушка:</strong><br>
+                • Ваша биохимия будет снова и снова тянуть вас к альфа-жертвам<br>
+                • Здоровые люди кажутся "скучными" - нет знакомой химии боли<br>
+                • Мы физически не можем влюбиться в здорового человека<br><br>
+                
+                <strong style="color: #27ae60;">🎯 Истина:</strong><br>
+                <em>Это не связь - это контроль. Они строили не ВМЕСТЕ с вами, а НАД вами.</em>
+            </div>
+        </div>
+            <h3>🏆 Навыки Героя для восстановления зубов:</h3>
+            <div class="skills-grid">
+                <div class="skill">❌ Разучиться угождать и стараться</div>
+                <div class="skill">❌ Разучиться хотеть быть правым</div>
+                <div class="skill">❌ Разучиться исправлять проблемы других</div>
+                <div class="skill">❌ Перестать принижать себя ради мира</div>
+                <div class="skill">✅ Освоить эмоциональную устойчивость</div>
+                <div class="skill">✅ Учиться у СП запрещенному поведению</div>
+            </div>
+        <div id="fablePanel" class="info-panel hidden">
+            <div class="info-title">🍇 Басня Эзопа "Лисица и виноград":</div>
+            <div class="info-content">
+                <strong>Классическая басня:</strong><br>
+                <em>"Голодная Лиса пробралась в сад и на высокой ветке увидела сочную гроздь винограда. «Этого-то мне и надобно!» — воскликнула она, разбежалась и прыгнула один раз, другой, третий... но всё бесполезно — до винограда никак не добраться. «Ах, так я и знала, зелен он ещё!» — фыркнула Лиса себе в оправдание и заспешила прочь."</em><br><br>
+                
+                <strong style="color: #e74c3c;">🧠 Когнитивный диссонанс в действии:</strong><br>
+                • Лиса хочет виноград → не может достать → меняет отношение к винограду<br>
+                • Вместо признания неудачи выбирает рационализацию: "зелен он ещё!"<br>
+                • Снижает психологический дискомфорт изменением своих установок<br><br>
+                
+                <strong style="color: #9b59b6;">📊 В треугольнике Казакова:</strong><br>
+                <strong>АЖ = Лисица:</strong> Не может "достать" СП → обесценивает его<br>
+                <strong>СП = Виноград:</strong> Живет своей жизнью, "фиолетово" на лисицу<br>
+                <strong>Лох = Дети лисицы:</strong> Верят, что виноград плохой, и тоже его гонят<br><br>
+                
+                <strong style="color: #27ae60;">🎯 Мораль:</strong><br>
+                Эзоп за 2500 лет до Фестингера описал механизм, который сегодня называется "когнитивный диссонанс". Народная мудрость знала психологию задолго до психологов!
+            </div>
+        </div>
+
+        <div class="hero-skills hidden" id="heroSkills">
+            <h3>🏆 Навыки Героя для восстановления зубов:</h3>
+            <div class="skills-grid">
+                <div class="skill">❌ Разучиться угождать и стараться</div>
+                <div class="skill">❌ Разучиться хотеть быть правым</div>
+                <div class="skill">❌ Разучиться исправлять проблемы других</div>
+                <div class="skill">❌ Перестать принижать себя ради мира</div>
+                <div class="skill">✅ Освоить эмоциональную устойчивость</div>
+                <div class="skill">✅ Учиться у СП запрещенному поведению</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'destructive';
+        let selectedRole = null;
+
+        const roleInfo = {
+            destructive: {
+                sp: {
+                    title: '🔥 СП - Плохой (но живет свободно)',
+                    content: `<strong>В деструктивной динамике воспринимается как:</strong><br>
+                    • Эгоист, который думает только о себе<br>
+                    • Бессердечный, не заботится об АЖ<br>
+                    • Разрушитель семьи/отношений<br>
+                    • Объект для осуждения и критики<br><br>
+                    <strong>На самом деле:</strong> Живет своей жизнью, имеет свои задачи, не участвует в играх<br><br>
+                    <em>Лох гонит на него, потому что обучен тому, что своим поведением СП делает плохо АЖ, для которой Лох старается</em>`
+                },
+                aj: {
+                    title: '😢 АЖ - прикидывается хорошей, но умеет манипулировать и подчинять Лоха',
+                    content: `<strong>В деструктивной динамике воспринимается как:</strong><br>
+                    • Жертва обстоятельств<br>
+                    • Страдающая и нуждающаяся в защите<br>
+                    • Правая во всех конфликтах<br>
+                    • Заслуживающая сочувствия<br><br>
+                    <strong>Механизм когнитивного диссонанса:</strong> Как лисица из басни Эзопа - гонит на "кислый виноград" (СП), который не может получить<br><br>
+                    <em>Использует страдания для контроля над Лохом</em>`
+                },
+                me: {
+                    title: '🤡 Я - Лох (развлекаю в ущерб себе)',
+                    content: `<strong>Поведение в деструктивной динамике:</strong><br>
+                    • Старается быть хорошим для АЖ<br>
+                    • Гонит на СП из солидарности с АЖ<br>
+                    • Отчуждает в себе качества СП<br>
+                    • Предает свою целостность<br><br>
+                    <strong>Результат:</strong> Внутренний конфликт разрушает зубы<br><br>
+                    <em>Биохимия настроена на получение "любви" через старания</em>`
+                }
+            },
+            healing: {
+                sp: {
+                    title: '🎓 СП - Учитель (мастер и наставник)',
+                    content: `<strong>В исцеляющей динамике:</strong><br>
+                    • Мастер, у которого можно учиться<br>
+                    • Наставник здорового поведения<br>
+                    • Тот, кто живет в свободе и силе<br>
+                    • Источник знаний о запрещенном поведении<br><br>
+                    <strong>Герой учится:</strong> Тому поведению, которое раньше себе запрещал из-за АЖ<br><br>
+                    <em>Переход от осуждения к ученичеству</em>`
+                },
+                aj: {
+                    title: '🐉 АЖ - Дракон (сопротивляется изменениям)',
+                    content: `<strong>В исцеляющей динамике:</strong><br>
+                    • Злится на изменения Героя<br>
+                    • Обижается на потерю контроля<br>
+                    • Пытается вернуть старую динамику<br>
+                    • Дракон, которого нужно победить<br><br>
+                    <strong>Герой не парится:</strong> по поводу ее манипуляций и может использовать без зазрения совести<br><br>
+                    <em>Из объекта защиты становится препятствием на пути</em>`
+                },
+                me: {
+                    title: '🏆 Я - Герой (иду по Пути Героя)',
+                    content: `<strong>Поведение в исцеляющей динамике:</strong><br>
+                    • Не считается с манипуляциями АЖ<br>
+                    • Учится у СП запрещенному поведению<br>
+                    • Обретает эмоциональную устойчивость<br>
+                    • Побеждает Дракона (АЖ) и получает сокровища<br><br>
+                    <strong>Сокровища:</strong> Здоровые зубы + здоровая коммуникация<br><br>
+                    <em>Путь от предательства себя к обретению целостности</em>`
+                }
+            }
+        };
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            document.getElementById('destructiveBtn').classList.toggle('active', mode === 'destructive');
+            document.getElementById('healingBtn').classList.toggle('active', mode === 'healing');
+            
+            const title = document.getElementById('dynamicTitle');
+            if (mode === 'destructive') {
+                title.textContent = '⚠️ деструктивная динамика: аж - 👍, сп - 👎, я - 🤡';
+                title.className = 'dynamic-title destructive-title';
+            } else {
+                title.textContent = '🎯 исцеляющая динамика: сп - 🔥, аж - 🐲, я - 😎';
+                title.className = 'dynamic-title healing-title';
+            }
+            
+            const container = document.getElementById('triangleContainer');
+            const trianglePath = document.getElementById('trianglePath');
+            container.classList.toggle('healing', mode === 'healing');
+            trianglePath.classList.toggle('healing', mode === 'healing');
+            
+            updateRoles(mode);
+            updateArrows(mode);
+            
+            document.getElementById('heroSkills').classList.toggle('hidden', mode === 'destructive');
+            document.getElementById('infoPanel').classList.toggle('healing', mode === 'healing');
+            
+            resetSelection();
+        }
+
+        function updateRoles(mode) {
+            const spRole = document.getElementById('spRole');
+            const ajRole = document.getElementById('ajRole');
+            const meRole = document.getElementById('meRole');
+            
+            if (mode === 'destructive') {
+                spRole.className = 'role sp-destructive';
+                spRole.innerHTML = '<div style="font-size: 22px; margin-bottom: 5px;">😈 СП</div><div style="font-size: 16px;">Плохой</div>';
+                
+                ajRole.className = 'role aj-destructive';
+                ajRole.innerHTML = '<div style="font-size: 22px; margin-bottom: 5px;">😢 Альфа-жертва</div><div style="font-size: 16px;">"Хорошая"</div>';
+                
+                meRole.className = 'role me-destructive';
+                meRole.innerHTML = '<div style="font-size: 22px; margin-bottom: 5px;">🤡 Лох</div><div style="font-size: 16px;">Старатель</div>';
+            } else {
+                spRole.className = 'role sp-healing';
+                spRole.innerHTML = '<div style="font-size: 22px; margin-bottom: 5px;">🎓 Учитель</div><div style="font-size: 16px;">Спарринг-партнер</div>';
+                
+                ajRole.className = 'role aj-healing';
+                ajRole.innerHTML = '<div style="font-size: 22px; margin-bottom: 5px;">🐉 Дракон</div><div style="font-size: 16px;">Альфа-жертва</div>';
+                
+                meRole.className = 'role me-healing';
+                meRole.innerHTML = '<div style="font-size: 22px; margin-bottom: 5px;">😎 Герой</div><div style="font-size: 16px;">Ученик</div>';
+            }
+        }
+
+        function updateArrows(mode) {
+            const arrow1 = document.getElementById('arrow1');
+            const arrow2 = document.getElementById('arrow2');
+            const arrow3 = document.getElementById('arrow3');
+            const arrow4 = document.getElementById('arrow4');
+            const arrow5 = document.getElementById('arrow5');
+            const arrow6 = document.getElementById('arrow6');
+            
+            if (mode === 'destructive') {
+                arrow1.className = 'arrow arrow-criticism-destructive';
+                arrow1.textContent = '😤 ⬆️';
+                arrow2.className = 'arrow arrow-judgment-destructive';
+                arrow2.textContent = '⚔️ ➡️';
+                arrow3.className = 'arrow arrow-support-destructive';
+                arrow3.textContent = '🙏 ➡️';
+                arrow4.className = 'arrow arrow-training-destructive';
+                arrow4.textContent = '⬅️ 🎪';
+                arrow5.className = 'arrow arrow-heartbreak-destructive';
+                arrow5.textContent = '⬅️ 💔';
+                arrow6.className = 'arrow arrow-indifference-destructive';
+                arrow6.textContent = '🍇 ⬇️';
+            } else {
+                arrow1.className = 'arrow arrow-resistance-healing';
+                arrow1.textContent = '😤 ⬆️';
+                arrow2.className = 'arrow arrow-learning-healing';
+                arrow2.textContent = '🎓 ➡️';
+                arrow3.className = 'arrow arrow-freedom-healing';
+                arrow3.textContent = '🥱 ➡️';
+                arrow4.className = 'arrow arrow-training-healing';
+                arrow4.textContent = '😤 ⬅️';
+                arrow5.className = 'arrow arrow-heartbreak-healing';
+                arrow5.textContent = '⬅️ 💘';
+                arrow6.className = 'arrow arrow-indifference-healing';
+                arrow6.textContent = '🍇 ⬇️';
+            }
+        }
+
+        function selectRole(role) {
+            document.querySelectorAll('.role').forEach(r => r.classList.remove('active'));
+            document.getElementById(role + 'Role').classList.add('active');
+            
+            const panel = document.getElementById('infoPanel');
+            const info = roleInfo[currentMode][role];
+            document.querySelector('.info-title').textContent = info.title;
+            document.getElementById('infoContent').innerHTML = info.content;
+            
+            selectedRole = role;
+        }
+
+        function showArrowMeaning() {
+            const panel = document.getElementById('arrowPanel');
+            panel.classList.toggle('hidden');
+            
+            const modeTitle = document.getElementById('arrowModeTitle');
+            const destructiveArrows = document.getElementById('destructiveArrows');
+            const healingArrows = document.getElementById('healingArrows');
+            
+            if (currentMode === 'destructive') {
+                modeTitle.textContent = 'деструктивной динамике';
+                destructiveArrows.classList.remove('hidden');
+                healingArrows.classList.add('hidden');
+            } else {
+                modeTitle.textContent = 'исцеляющей динамике';
+                destructiveArrows.classList.add('hidden');
+                healingArrows.classList.remove('hidden');
+            }
+        }
+
+        function showExample() {
+            const panel = document.getElementById('examplePanel');
+            panel.classList.toggle('hidden');
+            
+            const destructiveExample = document.getElementById('destructiveExample');
+            const healingExample = document.getElementById('healingExample');
+            
+            if (currentMode === 'destructive') {
+                destructiveExample.classList.remove('hidden');
+                healingExample.classList.add('hidden');
+            } else {
+                destructiveExample.classList.add('hidden');
+                healingExample.classList.remove('hidden');
+            }
+        }
+
+        function showHierarchy() {
+            const panel = document.getElementById('hierarchyPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function showFable() {
+            const panel = document.getElementById('fablePanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function resetSelection() {
+            document.querySelectorAll('.role').forEach(r => r.classList.remove('active'));
+            document.querySelector('.info-title').textContent = 'Нажмите на любую роль для подробной информации';
+            document.getElementById('infoContent').innerHTML = `
+                <strong>Переключайтесь между динамиками:</strong> Деструктивная показывает, как мы разрушаем зубы, а Исцеляющая - как их восстанавливать через изменение коммуникации.
+            `;
+            selectedRole = null;
+        }
+    </script>
+</body>
+</html>
